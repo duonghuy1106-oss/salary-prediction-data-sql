@@ -1,0 +1,536 @@
+/*
+salary_prediction_mysql_complete.sql
+
+SQL hoàn chỉnh dùng cho MySQL.
+
+Cách dùng:
+1. Mở MySQL Workbench.
+2. Chạy phần CREATE DATABASE trước.
+3. Chạy file Python salary_data_preprocessing_mysql_complete.py để đẩy dữ liệu vào MySQL.
+4. Quay lại MySQL Workbench và chạy các truy vấn bên dưới.
+
+Lưu ý:
+- Các bảng wage_data, skills_data, abilities_data, technology_data, final_dataset
+  được tạo tự động từ Python bằng pandas.to_sql().
+- File SQL này chủ yếu dùng để truy vấn và phân tích sau khi dữ liệu đã được nạp.
+*/
+
+
+-- =========================================================
+-- 1. TẠO DATABASE
+-- =========================================================
+
+CREATE DATABASE IF NOT EXISTS salary_prediction_db
+CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;
+
+USE salary_prediction_db;
+
+
+-- =========================================================
+-- 2. KIỂM TRA DANH SÁCH BẢNG
+-- =========================================================
+
+SHOW TABLES;
+
+
+-- =========================================================
+-- 3. KIỂM TRA CẤU TRÚC CÁC BẢNG
+-- =========================================================
+
+DESCRIBE wage_data;
+DESCRIBE technology_data;
+DESCRIBE final_dataset;
+
+
+-- =========================================================
+-- 4. KIỂM TRA SỐ LƯỢNG DÒNG TRONG TỪNG BẢNG
+-- =========================================================
+
+SELECT 'wage_data' AS table_name, COUNT(*) AS total_rows
+FROM wage_data;
+
+SELECT 'skills_data' AS table_name, COUNT(*) AS total_rows
+FROM skills_data;
+
+SELECT 'abilities_data' AS table_name, COUNT(*) AS total_rows
+FROM abilities_data;
+
+SELECT 'technology_data' AS table_name, COUNT(*) AS total_rows
+FROM technology_data;
+
+SELECT 'final_dataset' AS table_name, COUNT(*) AS total_rows
+FROM final_dataset;
+
+
+-- =========================================================
+-- 5. XEM 10 DÒNG ĐẦU CỦA TỪNG BẢNG
+-- =========================================================
+
+SELECT *
+FROM wage_data
+LIMIT 10;
+
+SELECT *
+FROM technology_data
+LIMIT 10;
+
+SELECT *
+FROM final_dataset
+LIMIT 10;
+
+
+-- =========================================================
+-- 6. KIỂM TRA GIÁ TRỊ LƯƠNG BỊ THIẾU
+-- =========================================================
+
+SELECT *
+FROM final_dataset
+WHERE annual_median_wage IS NULL;
+
+
+-- =========================================================
+-- 7. KIỂM TRA MÃ NGHỀ BỊ TRÙNG
+-- =========================================================
+
+SELECT 
+    soc_code,
+    COUNT(*) AS duplicate_count
+FROM final_dataset
+GROUP BY soc_code
+HAVING COUNT(*) > 1;
+
+
+-- =========================================================
+-- 8. TOP 10 NGHỀ CÓ LƯƠNG TRUNG VỊ NĂM CAO NHẤT
+-- =========================================================
+
+SELECT 
+    soc_code,
+    occupation_title,
+    annual_median_wage,
+    annual_mean_wage,
+    total_employment
+FROM final_dataset
+ORDER BY annual_median_wage DESC
+LIMIT 10;
+
+
+-- =========================================================
+-- 9. TOP 10 NGHỀ CÓ LƯƠNG TRUNG VỊ NĂM THẤP NHẤT
+-- =========================================================
+
+SELECT 
+    soc_code,
+    occupation_title,
+    annual_median_wage,
+    annual_mean_wage,
+    total_employment
+FROM final_dataset
+WHERE annual_median_wage IS NOT NULL
+ORDER BY annual_median_wage ASC
+LIMIT 10;
+
+
+-- =========================================================
+-- 10. TOP 10 NGHỀ CÓ NHIỀU TECHNOLOGY SKILLS NHẤT
+-- =========================================================
+
+SELECT 
+    soc_code,
+    occupation_title,
+    annual_median_wage,
+    num_technology_skills,
+    num_technology_categories,
+    num_hot_technology,
+    num_in_demand_technology
+FROM final_dataset
+ORDER BY num_technology_skills DESC
+LIMIT 10;
+
+
+-- =========================================================
+-- 11. TOP 10 NGHỀ CÓ NHIỀU HOT TECHNOLOGY NHẤT
+-- =========================================================
+
+SELECT 
+    soc_code,
+    occupation_title,
+    annual_median_wage,
+    num_technology_skills,
+    num_hot_technology
+FROM final_dataset
+ORDER BY num_hot_technology DESC
+LIMIT 10;
+
+
+-- =========================================================
+-- 12. TOP 10 NGHỀ CÓ NHIỀU IN DEMAND TECHNOLOGY NHẤT
+-- =========================================================
+
+SELECT 
+    soc_code,
+    occupation_title,
+    annual_median_wage,
+    num_technology_skills,
+    num_in_demand_technology
+FROM final_dataset
+ORDER BY num_in_demand_technology DESC
+LIMIT 10;
+
+
+-- =========================================================
+-- 13. DANH SÁCH NGHỀ CÓ YÊU CẦU PYTHON
+-- =========================================================
+
+SELECT 
+    soc_code,
+    occupation_title,
+    annual_median_wage,
+    has_python,
+    has_sql,
+    has_excel,
+    has_tableau,
+    has_r
+FROM final_dataset
+WHERE has_python = 1
+ORDER BY annual_median_wage DESC;
+
+
+-- =========================================================
+-- 14. DANH SÁCH NGHỀ CÓ YÊU CẦU SQL
+-- =========================================================
+
+SELECT 
+    soc_code,
+    occupation_title,
+    annual_median_wage,
+    has_python,
+    has_sql,
+    has_excel,
+    has_tableau,
+    has_r
+FROM final_dataset
+WHERE has_sql = 1
+ORDER BY annual_median_wage DESC;
+
+
+-- =========================================================
+-- 15. DANH SÁCH NGHỀ CÓ YÊU CẦU EXCEL
+-- =========================================================
+
+SELECT 
+    soc_code,
+    occupation_title,
+    annual_median_wage,
+    has_excel
+FROM final_dataset
+WHERE has_excel = 1
+ORDER BY annual_median_wage DESC;
+
+
+-- =========================================================
+-- 16. DANH SÁCH NGHỀ CÓ YÊU CẦU TABLEAU
+-- =========================================================
+
+SELECT 
+    soc_code,
+    occupation_title,
+    annual_median_wage,
+    has_tableau
+FROM final_dataset
+WHERE has_tableau = 1
+ORDER BY annual_median_wage DESC;
+
+
+-- =========================================================
+-- 17. DANH SÁCH NGHỀ CÓ YÊU CẦU R
+-- =========================================================
+
+SELECT 
+    soc_code,
+    occupation_title,
+    annual_median_wage,
+    has_r
+FROM final_dataset
+WHERE has_r = 1
+ORDER BY annual_median_wage DESC;
+
+
+-- =========================================================
+-- 18. SO SÁNH LƯƠNG THEO NHÓM CÓ/KHÔNG CÓ PYTHON
+-- =========================================================
+
+SELECT 
+    has_python,
+    COUNT(*) AS number_of_occupations,
+    ROUND(AVG(annual_median_wage), 2) AS avg_annual_median_wage,
+    ROUND(MIN(annual_median_wage), 2) AS min_annual_median_wage,
+    ROUND(MAX(annual_median_wage), 2) AS max_annual_median_wage
+FROM final_dataset
+GROUP BY has_python;
+
+
+-- =========================================================
+-- 19. SO SÁNH LƯƠNG THEO NHÓM CÓ/KHÔNG CÓ SQL
+-- =========================================================
+
+SELECT 
+    has_sql,
+    COUNT(*) AS number_of_occupations,
+    ROUND(AVG(annual_median_wage), 2) AS avg_annual_median_wage,
+    ROUND(MIN(annual_median_wage), 2) AS min_annual_median_wage,
+    ROUND(MAX(annual_median_wage), 2) AS max_annual_median_wage
+FROM final_dataset
+GROUP BY has_sql;
+
+
+-- =========================================================
+-- 20. SO SÁNH LƯƠNG THEO NHÓM CÓ/KHÔNG CÓ EXCEL
+-- =========================================================
+
+SELECT 
+    has_excel,
+    COUNT(*) AS number_of_occupations,
+    ROUND(AVG(annual_median_wage), 2) AS avg_annual_median_wage,
+    ROUND(MIN(annual_median_wage), 2) AS min_annual_median_wage,
+    ROUND(MAX(annual_median_wage), 2) AS max_annual_median_wage
+FROM final_dataset
+GROUP BY has_excel;
+
+
+-- =========================================================
+-- 21. SO SÁNH LƯƠNG THEO NHÓM CÓ/KHÔNG CÓ TABLEAU
+-- =========================================================
+
+SELECT 
+    has_tableau,
+    COUNT(*) AS number_of_occupations,
+    ROUND(AVG(annual_median_wage), 2) AS avg_annual_median_wage,
+    ROUND(MIN(annual_median_wage), 2) AS min_annual_median_wage,
+    ROUND(MAX(annual_median_wage), 2) AS max_annual_median_wage
+FROM final_dataset
+GROUP BY has_tableau;
+
+
+-- =========================================================
+-- 22. SO SÁNH LƯƠNG THEO NHÓM CÓ/KHÔNG CÓ R
+-- =========================================================
+
+SELECT 
+    has_r,
+    COUNT(*) AS number_of_occupations,
+    ROUND(AVG(annual_median_wage), 2) AS avg_annual_median_wage,
+    ROUND(MIN(annual_median_wage), 2) AS min_annual_median_wage,
+    ROUND(MAX(annual_median_wage), 2) AS max_annual_median_wage
+FROM final_dataset
+GROUP BY has_r;
+
+
+-- =========================================================
+-- 23. PHÂN NHÓM NGHỀ THEO MỨC LƯƠNG
+-- =========================================================
+
+SELECT
+    CASE
+        WHEN annual_median_wage < 40000 THEN 'Low wage'
+        WHEN annual_median_wage >= 40000 AND annual_median_wage < 80000 THEN 'Medium wage'
+        WHEN annual_median_wage >= 80000 AND annual_median_wage < 120000 THEN 'High wage'
+        ELSE 'Very high wage'
+    END AS wage_group,
+    COUNT(*) AS number_of_occupations,
+    ROUND(AVG(annual_median_wage), 2) AS avg_annual_median_wage,
+    ROUND(MIN(annual_median_wage), 2) AS min_annual_median_wage,
+    ROUND(MAX(annual_median_wage), 2) AS max_annual_median_wage
+FROM final_dataset
+GROUP BY wage_group
+ORDER BY avg_annual_median_wage;
+
+
+-- =========================================================
+-- 24. PHÂN TÍCH LIÊN HỆ GIỮA SỐ TECHNOLOGY SKILLS VÀ LƯƠNG
+-- =========================================================
+
+SELECT
+    CASE
+        WHEN num_technology_skills = 0 THEN '0'
+        WHEN num_technology_skills BETWEEN 1 AND 20 THEN '1-20'
+        WHEN num_technology_skills BETWEEN 21 AND 50 THEN '21-50'
+        WHEN num_technology_skills BETWEEN 51 AND 100 THEN '51-100'
+        ELSE 'Over 100'
+    END AS technology_skill_group,
+    COUNT(*) AS number_of_occupations,
+    ROUND(AVG(annual_median_wage), 2) AS avg_annual_median_wage,
+    ROUND(AVG(num_technology_skills), 2) AS avg_num_technology_skills
+FROM final_dataset
+GROUP BY technology_skill_group
+ORDER BY avg_num_technology_skills;
+
+
+-- =========================================================
+-- 25. TRUY VẤN MỘT SỐ KỸ NĂNG QUAN TRỌNG
+-- Nếu MySQL báo lỗi Unknown column, hãy chạy DESCRIBE final_dataset;
+-- để xem tên cột thực tế.
+-- =========================================================
+
+SELECT 
+    soc_code,
+    occupation_title,
+    annual_median_wage,
+    skill_Critical_Thinking_IM,
+    skill_Critical_Thinking_LV
+FROM final_dataset
+ORDER BY skill_Critical_Thinking_IM DESC
+LIMIT 10;
+
+SELECT 
+    soc_code,
+    occupation_title,
+    annual_median_wage,
+    skill_Programming_IM,
+    skill_Programming_LV
+FROM final_dataset
+ORDER BY skill_Programming_IM DESC
+LIMIT 10;
+
+SELECT 
+    soc_code,
+    occupation_title,
+    annual_median_wage,
+    skill_Mathematics_IM,
+    skill_Mathematics_LV
+FROM final_dataset
+ORDER BY skill_Mathematics_IM DESC
+LIMIT 10;
+
+SELECT 
+    soc_code,
+    occupation_title,
+    annual_median_wage,
+    skill_Reading_Comprehension_IM,
+    skill_Reading_Comprehension_LV
+FROM final_dataset
+ORDER BY skill_Reading_Comprehension_IM DESC
+LIMIT 10;
+
+
+-- =========================================================
+-- 26. TRUY VẤN MỘT SỐ NĂNG LỰC QUAN TRỌNG
+-- =========================================================
+
+SELECT 
+    soc_code,
+    occupation_title,
+    annual_median_wage,
+    ability_Mathematical_Reasoning_IM,
+    ability_Mathematical_Reasoning_LV
+FROM final_dataset
+ORDER BY ability_Mathematical_Reasoning_IM DESC
+LIMIT 10;
+
+SELECT 
+    soc_code,
+    occupation_title,
+    annual_median_wage,
+    ability_Oral_Comprehension_IM,
+    ability_Oral_Comprehension_LV
+FROM final_dataset
+ORDER BY ability_Oral_Comprehension_IM DESC
+LIMIT 10;
+
+SELECT 
+    soc_code,
+    occupation_title,
+    annual_median_wage,
+    ability_Problem_Sensitivity_IM,
+    ability_Problem_Sensitivity_LV
+FROM final_dataset
+ORDER BY ability_Problem_Sensitivity_IM DESC
+LIMIT 10;
+
+
+-- =========================================================
+-- 27. TẠO VIEW TÓM TẮT CHO BÁO CÁO
+-- =========================================================
+
+DROP VIEW IF EXISTS report_summary_view;
+
+CREATE VIEW report_summary_view AS
+SELECT
+    soc_code,
+    occupation_title,
+    total_employment,
+    annual_median_wage,
+    annual_mean_wage,
+    num_technology_skills,
+    num_technology_categories,
+    num_hot_technology,
+    num_in_demand_technology,
+    has_python,
+    has_sql,
+    has_excel,
+    has_tableau,
+    has_r
+FROM final_dataset;
+
+SELECT *
+FROM report_summary_view
+LIMIT 20;
+
+
+-- =========================================================
+-- 28. TẠO VIEW NHÓM NGHỀ CÔNG NGHỆ CAO
+-- =========================================================
+
+DROP VIEW IF EXISTS high_tech_occupations_view;
+
+CREATE VIEW high_tech_occupations_view AS
+SELECT
+    soc_code,
+    occupation_title,
+    annual_median_wage,
+    num_technology_skills,
+    num_hot_technology,
+    num_in_demand_technology,
+    has_python,
+    has_sql,
+    has_tableau,
+    has_r
+FROM final_dataset
+WHERE 
+    has_python = 1
+    OR has_sql = 1
+    OR has_tableau = 1
+    OR has_r = 1
+ORDER BY annual_median_wage DESC;
+
+SELECT *
+FROM high_tech_occupations_view
+LIMIT 20;
+
+
+-- =========================================================
+-- 29. TẠO VIEW TOP NGHỀ LƯƠNG CAO
+-- =========================================================
+
+DROP VIEW IF EXISTS top_salary_occupations_view;
+
+CREATE VIEW top_salary_occupations_view AS
+SELECT
+    soc_code,
+    occupation_title,
+    total_employment,
+    annual_median_wage,
+    annual_mean_wage,
+    num_technology_skills,
+    has_python,
+    has_sql,
+    has_excel,
+    has_tableau,
+    has_r
+FROM final_dataset
+ORDER BY annual_median_wage DESC;
+
+SELECT *
+FROM top_salary_occupations_view
+LIMIT 20;
